@@ -17,23 +17,28 @@ public class ESVArea {
     }
 
     public File prepare() {
-        File envFolder = new File(historyArea.folder, environment);
-        if(!envFolder.exists()) {
-            envFolder.mkdir();
+        if(historyArea.folder) {
+            File envFolder = new File(historyArea.folder, environment);
+            if(!envFolder.exists()) {
+                envFolder.mkdir();
+            }
+            
+            File stageFolder = new File(envFolder, stage);
+            if(!stageFolder.exists()) {
+                stageFolder.mkdir();
+            }
+            
+            File versionFolder = new File(stageFolder, historyArea.version);
+            if(versionFolder.exists()) {
+                versionFolder.deleteDir();
+            }
+            
+            versionFolder.mkdir();
+            return versionFolder;
         }
-
-        File stageFolder = new File(envFolder, stage);
-        if(!stageFolder.exists()) {
-            stageFolder.mkdir();
+        else {
+            return null;
         }
-
-        File versionFolder = new File(stageFolder, historyArea.version);
-        if(versionFolder.exists()) {
-            versionFolder.deleteDir();
-        }
-
-        versionFolder.mkdir();
-        return versionFolder;
     }
     
     @Override
@@ -52,7 +57,7 @@ public class ESVArea {
         return environment.hashCode() + stage.hashCode();
     }
 
-    public static String path(String environment, String stage) {
+    public String getPath() {
         return "${environment}/${stage}/".toString();
     }
     

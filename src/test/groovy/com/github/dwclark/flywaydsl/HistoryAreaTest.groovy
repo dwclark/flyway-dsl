@@ -58,4 +58,45 @@ public class HistoryAreaTest extends Specification {
         !area.isLegalStage('other');
         
     }
+
+    def "Test Stages To Run"() {
+        setup:
+        HistoryArea harea = new HistoryArea(null, [ 'env1', 'env2' ], ['foo','bar','baz'], '1.0.0');
+
+        expect:
+        harea.stagesToRun('baz') == ['foo','bar','baz'];
+        harea.stagesToRun('bar') == ['foo','bar'];
+        harea.stagesToRun('foo') == ['foo'];
+        new HistoryArea(null, ['env1'], ['foo'], '1.0').stagesToRun('foo') == ['foo'];
+    }
+
+    def "Test Bad Stage"() {
+        setup:
+        HistoryArea harea = new HistoryArea(null, ['foo','bar','baz'], [ 'stage1', 'stage2' ], '1.0.0');
+
+        when:
+        harea.stagesToRun('blah')
+
+        then:
+        thrown(IllegalArgumentException);
+    }
+
+    def "Test Legal Environment"() {
+        setup:
+        HistoryArea harea = new HistoryArea(null, ['prod', 'qa'], [ 'stage1', 'stage2' ], '1.0.0');
+        List<String> toRun;
+
+        when:
+        harea.environmentsToRun('dev');
+
+        then:
+        thrown(IllegalArgumentException);
+
+        when:
+        toRun = harea.environmentsToRun('prod');
+
+        then:
+        notThrown(IllegalArgumentException);
+        toRun == [ 'common', 'prod' ];
+    }
 }

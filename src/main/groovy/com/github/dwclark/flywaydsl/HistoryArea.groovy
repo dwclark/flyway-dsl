@@ -5,7 +5,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class HistoryArea {
     
     public static final String COMMON = 'common';
-    
+    public static final String REPAIR = 'repair';
+
     final File folder;
     final List<String> environments;
     final List<String> stages;
@@ -13,8 +14,7 @@ public class HistoryArea {
     final String version;
     final List<ESVArea> esvAreas;
 
-    public HistoryArea(File folder, List<String> environments,
-                       List<String> stages, String version) {
+    public HistoryArea(File folder, List<String> environments, List<String> stages, String version) {
         this.folder = folder;
         this.environments = environments.contains(COMMON) ? environments : [ COMMON ] + environments;
         this.stages = stages;
@@ -24,7 +24,7 @@ public class HistoryArea {
         environments.each { String environment ->
             stages.each { String stage ->
                 tmp << new ESVArea(this, environment, stage); }; };
-        esvAreas = tmp.asImmutable();
+        this.esvAreas = tmp.asImmutable();
 
         this.stageIndexes = stages.inject([:]) { Map map, String stage ->
             map[stage] = new AtomicInteger(1); return map; }.asImmutable();
@@ -67,10 +67,49 @@ public class HistoryArea {
     }
 
     public boolean isLegalStage(String stage) {
-        return stages.contains(stage);
+        return (stage == REPAIR || stages.contains(stage));
     }
 
     public boolean isLegalEnvironment(String environment) {
         return environments.contains(environment);
+    }
+
+    public List<ESVArea> toRun(String argEnviroment, String argStage) {
+        List<ESVArea> ret = [];
+        environmentsToRun(argEnvironment).each { String environment ->
+            stagesToRun(argStage).each { String stage ->
+                ret << esvAreas.find { ESVArea esvArea -> esvArea.matches(environment, stage); }; }; };
+        return ret;
+    }
+
+    public List<String> environmentsToRun(String environment) {
+        if(!isLegalEnvironment(environment)) {
+            throw new IllegalArgumentException("${environment} is not a legal environment");
+        }
+
+        return [ COMMON, environment ];
+    }
+
+    public List<String> stagesToRun(String stage) {
+        if(!isLegalStage(stage)) {
+            throw new IllegalArgumentException("${stage} is not a legal stage");
+        }
+
+        if(stage == REPAIR) {
+            return stages;
+        }
+        
+        boolean stop = false;
+        List<String> ret = [];
+        stages.each { String possibleStage ->
+            if(!stop) {
+                ret << possibleStage;
+            }
+            
+            if(stage == possibleStage) {
+                stop = true;
+            } };
+        
+        return ret;
     }
 }

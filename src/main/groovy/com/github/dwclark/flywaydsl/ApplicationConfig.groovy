@@ -8,6 +8,7 @@ public class ApplicationConfig {
     public static final String RESOURCE = 'application.properties';
     public static final String STAGES = 'stages';
     public static final String ENVIRONMENTS = 'environments';
+    public static final String CALLBACKS = 'callbacks';
     public static final String SCHEMAS = 'schemas';
     public static final String SCRIPT = 'script';
 
@@ -17,6 +18,7 @@ public class ApplicationConfig {
     final String url;
     final String user;
     final String password;
+    final String env;
 
     //command line
     final String action;
@@ -26,6 +28,7 @@ public class ApplicationConfig {
     final List<String> environments;
     final List<String> stages;
     final List<String> schemas;
+    final List<String> callbacks;
     final String script;
 
     public ApplicationConfig(String[] args) {
@@ -33,6 +36,7 @@ public class ApplicationConfig {
         this.environments = toList(preConfig, ENVIRONMENTS);
         this.stages = toList(preConfig, STAGES);
         this.schemas = toList(preConfig, SCHEMAS);
+        this.callbacks = toList(preConfig, CALLBACKS);
         this.script = preConfig[SCRIPT];
 
         this.cli = cliBuilder(args, script, stages);
@@ -43,9 +47,11 @@ public class ApplicationConfig {
         }
         else if(accessor.f) {
             Properties dbProperties = loadDbProperties(accessor.f);
-            this.url = dbProperties['url'];
-            this.user = dbProperties['user']
-            this.password = dbProperties['password'];
+            this.url = dbProperties.containsKey('url') ? dbProperties['url'] : null;
+            this.user = dbProperties.containsKey('user') ? dbProperties['user'] : null;
+            this.password = dbProperties.containsKey('password') ? dbProperties['password'] : null;
+            this.env = dbProperties.containsKey('env') ? dbProperties['env'] : null;
+
             def extra = accessor.arguments();
             this.action = (extra && extra.size() > 0) ? extra[0] : null;
         }

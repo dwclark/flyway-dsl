@@ -33,7 +33,7 @@ public class ApplicationConfigTest extends Specification {
 
     def "Test Config"() {
         setup:
-        Properties dbProps = [ url: 'the-url', user: 'the-user', password: 'the-password' ] as Properties;
+        Properties dbProps = [ url: 'the-url', user: 'the-user', password: 'the-password', env: 'the-env' ] as Properties;
         File propsFile = new File(folder.root, 'db.properties');
         propsFile.withWriter { writer -> dbProps.store(writer, ''); };
         ApplicationConfig config;
@@ -46,6 +46,7 @@ public class ApplicationConfigTest extends Specification {
         config.url == dbProps.url;
         config.user == dbProps.user;
         config.password == dbProps.password;
+        config.env == dbProps.env;
 
         when:
         config = new ApplicationConfig([ '-f', propsFile.absolutePath] as String[]);
