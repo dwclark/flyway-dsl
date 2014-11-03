@@ -27,11 +27,7 @@ public abstract class Dsl extends Script {
     }
 
     public String checkEnvironment(String name, Map args) {
-        if(!args.containsKey('env')) {
-            throw new IllegalArgumentException("You must specify an environment for ${args}");
-        }
-        
-        if(!historyArea.isLegalEnvironment(args['env'])) {
+        if(args.containsKey('env') && !historyArea.isLegalEnvironment(args['env'])) {
             throw new RuntimeException("${args['env']} is not a legal environment");
         }
         

@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class HistoryArea {
     
     public static final String COMMON = 'common';
-    public static final String REPAIR = 'repair';
+    public static final String REPAIR = 'runRepair';
 
     final File folder;
     final List<String> environments;
@@ -21,8 +21,8 @@ public class HistoryArea {
         this.version = version;
         
         List<ESVArea> tmp = [];
-        environments.each { String environment ->
-            stages.each { String stage ->
+        this.environments.each { String environment ->
+            this.stages.each { String stage ->
                 tmp << new ESVArea(this, environment, stage); }; };
         this.esvAreas = tmp.asImmutable();
 
@@ -74,10 +74,18 @@ public class HistoryArea {
         return environments.contains(environment);
     }
 
-    public List<ESVArea> toRun(String argEnviroment, String argStage) {
+    public static String runToStage(String runner) {
+        return runner.substring(3,4).toLowerCase() + runner.substring(4);
+    }
+
+    public static String stageToRun(String stage) {
+        return 'run' + stage.substring(0,1).toUpperCase() + stage.substring(1);
+    }
+
+    public List<ESVArea> toRun(String argEnvironment, String runner) {
         List<ESVArea> ret = [];
         environmentsToRun(argEnvironment).each { String environment ->
-            stagesToRun(argStage).each { String stage ->
+            stagesToRun(runner).each { String stage ->
                 ret << esvAreas.find { ESVArea esvArea -> esvArea.matches(environment, stage); }; }; };
         return ret;
     }
@@ -90,7 +98,9 @@ public class HistoryArea {
         return [ COMMON, environment ];
     }
 
-    public List<String> stagesToRun(String stage) {
+    public List<String> stagesToRun(String runner) {
+        String stage = runToStage(runner);
+
         if(!isLegalStage(stage)) {
             throw new IllegalArgumentException("${stage} is not a legal stage");
         }

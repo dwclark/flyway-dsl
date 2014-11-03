@@ -64,10 +64,10 @@ public class HistoryAreaTest extends Specification {
         HistoryArea harea = new HistoryArea(null, [ 'env1', 'env2' ], ['foo','bar','baz'], '1.0.0');
 
         expect:
-        harea.stagesToRun('baz') == ['foo','bar','baz'];
-        harea.stagesToRun('bar') == ['foo','bar'];
-        harea.stagesToRun('foo') == ['foo'];
-        new HistoryArea(null, ['env1'], ['foo'], '1.0').stagesToRun('foo') == ['foo'];
+        harea.stagesToRun('runBaz') == ['foo','bar','baz'];
+        harea.stagesToRun('runBar') == ['foo','bar'];
+        harea.stagesToRun('runFoo') == ['foo'];
+        new HistoryArea(null, ['env1'], ['foo'], '1.0').stagesToRun('runFoo') == ['foo'];
     }
 
     def "Test Bad Stage"() {
@@ -75,7 +75,7 @@ public class HistoryAreaTest extends Specification {
         HistoryArea harea = new HistoryArea(null, ['foo','bar','baz'], [ 'stage1', 'stage2' ], '1.0.0');
 
         when:
-        harea.stagesToRun('blah')
+        harea.stagesToRun('runBlah')
 
         then:
         thrown(IllegalArgumentException);
@@ -98,5 +98,12 @@ public class HistoryAreaTest extends Specification {
         then:
         notThrown(IllegalArgumentException);
         toRun == [ 'common', 'prod' ];
+    }
+
+    def "Test Runner Rename"() {
+        expect:
+        HistoryArea.stageToRun('post') == 'runPost';
+        HistoryArea.runToStage('runPost') == 'post';
+        HistoryArea.runToStage(HistoryArea.stageToRun('xyzpdq')) == 'xyzpdq';
     }
 }

@@ -57,6 +57,11 @@ public class ESVArea {
         return environment.hashCode() + stage.hashCode();
     }
 
+    @Override
+    public String toString() {
+        return "(${environment}, ${stage})";
+    }
+
     public String getPath() {
         return "${environment}/${stage}/".toString();
     }

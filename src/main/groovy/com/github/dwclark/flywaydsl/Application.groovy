@@ -29,6 +29,8 @@ public class Application {
             System.err.println("No value specified for database environement");
             return false;
         }
+
+        return true;
     }
 
     public FlywayCallback[] populateCallbacks() {
@@ -80,7 +82,7 @@ public class Application {
         }
 
         flyway.with {
-            if(HistoryArea.REPAIR == action) {
+            if(HistoryArea.REPAIR == config.action) {
                 repair();
             }
             else {
@@ -89,12 +91,14 @@ public class Application {
     }
 
     public static void main(String[] args) {
+        println("In Application.groovy");
         ApplicationConfig config = new ApplicationConfig(args);
         if(config.help || !config.action) {
             config.cli.usage();
             return;
         }
 
+        println("About to run application");
         new Application(config).run();
     }
 }
