@@ -69,7 +69,7 @@ public class FlywayDslPlugin implements Plugin<Project> {
         project.afterEvaluate { Project after ->
             after.tasks.getByName(MIGRATION_TASK_NAME).with {
                 def ext = project[MigrationsExtension.NAME];
-                inputs.files(after.files(ext.src, ext.sql));
+                inputs.files(after.files(ext.src, ext.sql, 'gradle.properties'));
                 outputs.files(after.files(ext.compileTo)); }; };
     }
 
@@ -79,6 +79,7 @@ public class FlywayDslPlugin implements Plugin<Project> {
             ext.stages.each { String stage ->
                 String taskName = HistoryArea.stageToRun(stage);
                 after.task(taskName).with {
+                    dependsOn(MIGRATION_TASK_NAME);
                     group = MIGRATION_GROUP_NAME;
                     description = "Run the ${stage} phase";
                     doLast {
@@ -112,11 +113,30 @@ public class FlywayDslPlugin implements Plugin<Project> {
             doLast { factory(VersionPosition.POINT).bump(); }; };
     }
 
+    public void enableDistZip(Project project) {
+        project.afterEvaluate { Project after ->
+            def ext = project[MigrationsExtension.NAME];
+            
+            after.tasks.getByName('startScripts').with {
+                applicationName = ext.applicationName;
+                mainClassName = Application.name;
+                classpath += after.files(ext.compileTo); };
+
+            [ 'distZip', 'distTar' ].each { taskName ->
+                after.tasks.getByName(taskName).with {
+                    baseName = ext.applicationName; }; };
+
+            after.tasks.getByName('jar').with {
+                baseName = ext.applicationName;
+                dependsOn(MIGRATION_TASK_NAME); }; };
+    }
+
     public void apply(Project project) {
         project.extensions.create(MigrationsExtension.NAME, MigrationsExtension);
         addDependencies(project);
         addVersioning(project);
         addCompilation(project);
         addPhases(project);
+        enableDistZip(project);
     }
 }
