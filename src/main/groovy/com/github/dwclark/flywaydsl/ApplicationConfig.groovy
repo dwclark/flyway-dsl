@@ -51,7 +51,6 @@ public class ApplicationConfig {
             this.user = dbProperties.containsKey('user') ? dbProperties['user'] : null;
             this.password = dbProperties.containsKey('password') ? dbProperties['password'] : null;
             this.env = dbProperties.containsKey('env') ? dbProperties['env'] : null;
-
             def extra = accessor.arguments();
             this.action = (extra && extra.size() > 0) ? extra[0] : null;
         }

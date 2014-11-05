@@ -69,7 +69,7 @@ public class FlywayDslPlugin implements Plugin<Project> {
         project.afterEvaluate { Project after ->
             after.tasks.getByName(MIGRATION_TASK_NAME).with {
                 def ext = project[MigrationsExtension.NAME];
-                inputs.files(after.files(ext.src, ext.sql, 'gradle.properties'));
+                inputs.files(after.files(ext.src, ext.sql, 'gradle.properties', 'db.properties'));
                 outputs.files(after.files(ext.compileTo)); }; };
     }
 

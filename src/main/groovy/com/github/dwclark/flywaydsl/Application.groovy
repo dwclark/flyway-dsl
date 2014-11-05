@@ -91,14 +91,12 @@ public class Application {
     }
 
     public static void main(String[] args) {
-        println("In Application.groovy");
         ApplicationConfig config = new ApplicationConfig(args);
         if(config.help || !config.action) {
             config.cli.usage();
             return;
         }
 
-        println("About to run application");
         new Application(config).run();
     }
 }
