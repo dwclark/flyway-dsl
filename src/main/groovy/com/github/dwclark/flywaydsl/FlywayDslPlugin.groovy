@@ -7,10 +7,10 @@ public class MigrationsExtension {
     public static final String NAME = 'migrations';
 
     String src = 'src/main/migrations';
-    String compileTo = 'src/dist/lib/history';
+    String compileTo = 'src/dist/lib/output';
     String sql = 'src/main/sql';
     String applicationName = 'migrate'
-    
+
     List<String> callbacks;
     List<String> schemas;
     List<String> environments;
@@ -48,8 +48,31 @@ public class FlywayDslPlugin implements Plugin<Project> {
             map[ApplicationConfig.SCHEMAS] = ext.schemas.join(',');
         }
 
-        File file = new File(project.file(ext.compileTo), ApplicationConfig.RESOURCE);
+        File file = new File(confFolder(project), ApplicationConfig.RESOURCE);
         file.withWriter { writer -> (map as Properties).store(writer, ''); };
+    }
+
+    public File ensureFolder(File folder) {
+        if(!folder.exists()) {
+            folder.mkdir();
+        }
+
+        return folder;
+    }
+
+    public File confFolder(Project project) {
+        def ext = project[MigrationsExtension.NAME];
+        return ensureFolder(new File(project.file(ext.compileTo), ApplicationConfig.CONF));
+    }
+
+    public File currentFolder(Project project) {
+        def ext = project[MigrationsExtension.NAME];
+        return ensureFolder(new File(project.file(ext.compileTo), Application.CURRENT));
+    }
+
+    public File historyFolder(Project project) {
+        def ext = project[MigrationsExtension.NAME];
+        return ensureFolder(new File(project.file(ext.compileTo), Application.HISTORY));
     }
 
     public void addCompilation(Project project) {
@@ -57,7 +80,7 @@ public class FlywayDslPlugin implements Plugin<Project> {
             doLast {
                 writeAppConfiguration(project);
                 def ext = project[MigrationsExtension.NAME];
-                HistoryArea harea = new HistoryArea(project.file(ext.compileTo), ext.environments,
+                HistoryArea harea = new HistoryArea(currentFolder(project), ext.environments,
                                                     ext.stages, project.version);
                 File migrateScript = project.file("${ext.src}/${project.version}/${Dsl.NAME}");
                 File sqlFolder = project.file(ext.sql);
@@ -70,7 +93,7 @@ public class FlywayDslPlugin implements Plugin<Project> {
             after.tasks.getByName(MIGRATION_TASK_NAME).with {
                 def ext = project[MigrationsExtension.NAME];
                 inputs.files(after.files(ext.src, ext.sql, 'gradle.properties', 'db.properties'));
-                outputs.files(after.files(ext.compileTo)); }; };
+                outputs.files(after.files(currentFolder(after), historyFolder(project))); }; };
     }
 
     public void addPhases(Project project) {
@@ -96,20 +119,32 @@ public class FlywayDslPlugin implements Plugin<Project> {
         def factory = { VersionPosition pos ->
             return new VersionBumper(project.file(project.migrations.src),
                                      project.file('gradle.properties'), pos); };
+        
+        def foldersForNewVersion = {
+            project.copy {
+                from(currentFolder(project));
+                into(historyFolder(project));
+            }
+
+            currentFolder(project).deleteDir();
+        }
 
         project.task('bumpMajorVersion').with {
             group = VERSIONING_GROUP_NAME;
             description = 'Bump major version number';
+            doFirst(foldersForNewVersion);
             doLast { factory(VersionPosition.MAJOR).bump(); }; };
 
         project.task('bumpMinorVersion').with {
             group = VERSIONING_GROUP_NAME;
             description = 'Bump minor version number';
+            doFirst(foldersForNewVersion);
             doLast { factory(VersionPosition.MINOR).bump(); }; };
 
         project.task('bumpPointVersion').with {
             group = VERSIONING_GROUP_NAME;
             description = 'Bump point version number';
+            doFirst(foldersForNewVersion);
             doLast { factory(VersionPosition.POINT).bump(); }; };
     }
 

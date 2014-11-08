@@ -7,6 +7,8 @@ public class Application {
 
     private static final String INITIAL_VERSION = 1.0;
     private static final String INITIAL_DESCRIPTION = 'flywayinitialize';
+    public static final String CURRENT = 'current';
+    public static final String HISTORY = 'history';
 
     final ApplicationConfig config;
 
@@ -59,10 +61,10 @@ public class Application {
             target.schemas = config.schemas as String[];
         }
 
-        List<String> locations = [];
+        List<String> locations = [ 'classpath:history' ];
         HistoryArea harea = new HistoryArea(null, config.environments, config.stages, '');
         harea.toRun(config.env, config.action).each { ESVArea esvArea ->
-            locations.add("classpath:/${esvArea.path}".toString()); }
+            locations.add("classpath:${CURRENT}/${esvArea.path}".toString()); }
         
         target.locations = locations as String[];
         target.validateOnMigrate = false;

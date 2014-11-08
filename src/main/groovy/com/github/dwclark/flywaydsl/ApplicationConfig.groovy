@@ -5,6 +5,7 @@ import org.apache.commons.cli.Option;
 public class ApplicationConfig {
     
     public static final String PROMPT = '<prompt>';
+    public static final String CONF = 'conf';
     public static final String RESOURCE = 'application.properties';
     public static final String STAGES = 'stages';
     public static final String ENVIRONMENTS = 'environments';
@@ -79,7 +80,8 @@ public class ApplicationConfig {
 
     public static Properties loadPreConfig() {
         Properties ret = new Properties();
-        ApplicationConfig.classLoader.getResourceAsStream(RESOURCE).withReader(MigrationStage.ENCODING) { reader -> ret.load(reader); };
+        String path = "${CONF}/${RESOURCE}";
+        ApplicationConfig.classLoader.getResourceAsStream(path).withReader(MigrationStage.ENCODING) { reader -> ret.load(reader); };
         return ret;
     }
 
